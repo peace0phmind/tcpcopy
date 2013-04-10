@@ -332,6 +332,14 @@ static int tc_nfq_process_packet(struct nfq_q_handle *qh,
             }
         }
 
+        /* check if it is the valid user mask to pass through firewall */
+        for (i = 0; i < srv_settings.passed_ip_masks.num; i++) {
+            if ((srv_settings.passed_ip_masks.ips[i] & ip_hdr->daddr) == ip_hdr->daddr) {
+                pass_through_flag = 1;
+                break;
+            }
+        }
+
         tot_resp_packs++;
 
         if (pass_through_flag) {

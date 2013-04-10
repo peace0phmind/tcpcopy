@@ -2,9 +2,12 @@
 #include <xcopy.h>
 
 int
-daemonize()
+daemonize(char * pidFile)
 {
     int fd;
+    char buf[32] = {'\0'};
+    int pid_fd = -1;
+    pid_t pidt;
 
     switch (fork()) {
         case -1:
@@ -17,6 +20,20 @@ daemonize()
     if (setsid() == -1) {
         return (-1);
     }
+
+    if (pidFile != NULL){
+        pid_fd = open(pidFile,O_RDWR|O_CREAT, 0644);
+        if (pid_fd != -1){
+            pidt = getpid();
+
+            sprintf(buf, "%d", pidt);
+
+            write(pid_fd, buf, strlen(buf));
+
+            close(pid_fd);
+        }
+    }
+
 
     if (chdir("/") != 0) {
         perror("chdir");

@@ -248,7 +248,7 @@ struct ethernet_hdr {
 #endif
 
 /* global functions */
-int daemonize();
+int daemonize(char * pidFile);
 inline int before(uint32_t seq1, uint32_t seq2);
 
 #define after(seq2, seq1) before(seq1, seq2)

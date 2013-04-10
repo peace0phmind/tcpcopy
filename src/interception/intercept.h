@@ -10,6 +10,7 @@ typedef struct passed_ip_addr_s {
 
 typedef struct xcopy_srv_settings {
     char                *raw_ip_list;    /* raw ip list */
+    char                *raw_ip_mask_list;
     char                *pid_file;       /* pid file */
     char                *binded_ip;      /* binded ip for security */
     char                *log_path;       /* error log path */
@@ -23,6 +24,7 @@ typedef struct xcopy_srv_settings {
     uint16_t             port;           /* TCP port number to listen on */
     unsigned int         do_daemonize:1; /* daemon flag */
     passed_ip_addr_t     passed_ips;     /* passed ip list */
+    passed_ip_addr_t     passed_ip_masks;/* passed ip mask list */
 }xcopy_srv_settings;
 
 extern xcopy_srv_settings srv_settings;

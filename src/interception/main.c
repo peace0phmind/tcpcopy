@@ -126,6 +126,50 @@ retrieve_ip_addr()
     return 1;
 }
 
+/* retrieve ip addresses */
+static int
+retrieve_ip_mask_addr()
+{
+    int          count = 0;
+    char         tmp[32];
+    size_t       len;
+    uint32_t     address;
+    const char  *split, *p;
+
+    memset(tmp, 0, 32);
+    p = srv_settings.raw_ip_mask_list;
+
+    while (true) {
+        split = strchr(p, ',');
+        if (split != NULL) {
+            len = (size_t) (split - p);
+        } else {
+            len = strlen(p);
+        }
+
+        strncpy(tmp, p, len);
+        address = inet_addr(tmp);
+        srv_settings.passed_ip_masks.ips[count++] = address;
+
+        if (count == MAX_ALLOWED_IP_NUM) {
+            tc_log_info(LOG_WARN, 0, "reach the limit mask for passing firewall");
+            break;
+        }
+
+        if (split == NULL) {
+            break;
+        } else {
+            p = split + 1;
+        }
+
+        memset(tmp, 0, 32);
+    }
+
+    srv_settings.passed_ip_masks.num = count;
+
+    return 1;
+}
+
 static void
 usage(void)
 {
@@ -133,6 +177,9 @@ usage(void)
     printf("-x <passlist,> passed IP list through firewall\n"
            "               Format:\n"
            "               ip_addr1, ip_addr2 ...\n"
+           "-m <passmasklist,> passed IP mask list through firewall\n"
+           "               Format:\n"
+           "               ip_mask1, ip_mask2 ...:192.168.0.255\n"
            "-p <num>       set the TCP port number to listen on. The default number is 36524.\n"
            "-s <num>       set the hash table size for intercept. The default value is 65536.\n"
            "-l <file>      save log information in <file>\n");
@@ -153,6 +200,7 @@ read_args(int argc, char **argv) {
     opterr = 0;
     while (-1 != (c = getopt(argc, argv,
          "x:" /* ip list passed through ip firewall */
+         "m:" /* ip mask list passed through ip firewall */
          "p:" /* TCP port number to listen on */
          "t:" /* router item timeout */
          "s:" /* hash table size for intercept */
@@ -167,6 +215,9 @@ read_args(int argc, char **argv) {
         switch (c) {
             case 'x':
                 srv_settings.raw_ip_list = optarg;
+                break;
+            case 'm':
+                srv_settings.raw_ip_mask_list = optarg;
                 break;
             case 'p':
                 srv_settings.port = (uint16_t) atoi(optarg);
@@ -251,6 +302,13 @@ set_details()
         retrieve_ip_addr();
     }
 
+    /* retrieve ip mask address */
+    if (srv_settings.raw_ip_mask_list != NULL) {
+        tc_log_info(LOG_NOTICE, 0, "-m parameter:%s", 
+                srv_settings.raw_ip_mask_list);
+        retrieve_ip_mask_addr();
+    }
+
     if (srv_settings.timeout == 0) {
         srv_settings.timeout = DEFAULT_TIMEOUT;
     }
@@ -259,7 +317,7 @@ set_details()
         if (sigignore(SIGHUP) == -1) {
             tc_log_info(LOG_ERR, errno, "failed to ignore SIGHUP");
         }
-        if (daemonize() == -1) {
+        if (daemonize(srv_settings.pid_file) == -1) {
             fprintf(stderr, "failed to daemon() in order to daemonize\n");
             return -1;
         }

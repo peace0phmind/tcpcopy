@@ -599,7 +599,7 @@ set_details()
         if (sigignore(SIGHUP) == -1) {
             tc_log_info(LOG_ERR, errno, "Failed to ignore SIGHUP");
         }
-        if (daemonize() == -1) {
+        if (daemonize(clt_settings.pid_file) == -1) {
             fprintf(stderr, "failed to daemonize() in order to daemonize\n");
             return -1;
         }    
