@@ -22,7 +22,7 @@ daemonize(char * pidFile)
     }
 
     if (pidFile != NULL){
-        pid_fd = open(pidFile,O_RDWR|O_CREAT, 0644);
+        pid_fd = open(pidFile,O_RDWR|O_CREAT|O_TRUNC, 0644);
         if (pid_fd != -1){
             pidt = getpid();
 
